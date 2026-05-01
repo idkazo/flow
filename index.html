@@ -1,1 +1,520 @@
-aaa
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>لوحة تفاعلية</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel2:#1f2937;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --border:#334155;
+      --accent:#60a5fa;
+      --good:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 18px 45px rgba(0,0,0,.25);
+      --radius: 22px;
+    }
+    [data-theme="light"]{
+      --bg:#f8fafc;
+      --panel:#ffffff;
+      --panel2:#f1f5f9;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#cbd5e1;
+      --accent:#2563eb;
+      --good:#16a34a;
+      --bad:#dc2626;
+      --warn:#d97706;
+      --shadow: 0 18px 45px rgba(2,6,23,.10);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(96,165,250,.18), transparent 30%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:24px;
+    }
+    .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(1.5rem, 2.5vw, 2.4rem);
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:var(--panel);
+      box-shadow:var(--shadow);
+      white-space:nowrap;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), transparent), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .section{
+      display:grid;
+      gap:14px;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .status{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .dot{
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:var(--bad);
+      box-shadow:0 0 0 6px rgba(239,68,68,.12);
+    }
+    .dot.online{
+      background:var(--good);
+      box-shadow:0 0 0 6px rgba(34,197,94,.12);
+    }
+    .pill{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--panel2);
+      color:var(--text);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .muted{color:var(--muted)}
+    .tiny{font-size:.9rem}
+    .sep{
+      height:1px;
+      background:var(--border);
+      margin:2px 0;
+    }
+    label{
+      font-size:.92rem;
+      color:var(--muted);
+      margin-bottom:6px;
+      display:block;
+    }
+    input, textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px 14px;
+      background:var(--panel2);
+      color:var(--text);
+      outline:none;
+      font:inherit;
+    }
+    textarea{
+      min-height:120px;
+      resize:vertical;
+    }
+    input:focus, textarea:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 4px rgba(96,165,250,.14);
+    }
+    .buttons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    button{
+      border:none;
+      border-radius:14px;
+      padding:11px 15px;
+      font:inherit;
+      cursor:pointer;
+      background:var(--panel2);
+      color:var(--text);
+      border:1px solid var(--border);
+      transition: transform .08s ease, filter .15s ease;
+    }
+    button:hover{filter:brightness(1.05)}
+    button:active{transform:translateY(1px)}
+    button.primary{background:var(--accent); border-color:transparent; color:#fff}
+    button.good{background:var(--good); border-color:transparent; color:#fff}
+    button.bad{background:var(--bad); border-color:transparent; color:#fff}
+    button.warn{background:var(--warn); border-color:transparent; color:#fff}
+    .list{
+      display:grid;
+      gap:10px;
+      max-height:330px;
+      overflow:auto;
+      padding-right:2px;
+    }
+    .item{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:12px 14px;
+    }
+    .item-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:5px;
+    }
+    .item-title{
+      font-weight:700;
+    }
+    .item-meta{
+      color:var(--muted);
+      font-size:.88rem;
+    }
+    .footer{
+      margin-top:14px;
+      color:var(--muted);
+      line-height:1.8;
+      font-size:.92rem;
+    }
+    .two{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 640px){
+      .two{grid-template-columns:1fr}
+    }
+    .switch{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .on{color:var(--good); font-weight:700}
+    .off{color:var(--bad); font-weight:700}
+    code{
+      background:var(--panel2);
+      border:1px solid var(--border);
+      padding:2px 6px;
+      border-radius:8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>لوحة تفاعلية</h1>
+        <div class="sub">
+          صفحة واحدة تعمل مباشرة. الأزرار، الحقول، والقائمة كلها تفاعلية بدون أي مكتبات أو سيرفر.
+        </div>
+      </div>
+      <div class="badge">
+        <span id="themeLabel">الوضع الداكن</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="card section">
+        <div class="row">
+          <div class="status">
+            <span id="statusDot" class="dot"></span>
+            <strong id="connectionText">متصل</strong>
+          </div>
+          <div class="pill">آخر تحديث: <span id="lastUpdate">—</span></div>
+        </div>
+
+        <div class="two">
+          <button id="toggleConnectBtn" class="primary" type="button">فصل الاتصال</button>
+          <button id="toggleThemeBtn" type="button">تبديل الشكل</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div>
+          <label for="messageInput">اكتب رسالة</label>
+          <textarea id="messageInput" placeholder="اكتب هنا ثم اضغط إرسال..."></textarea>
+        </div>
+
+        <div class="buttons">
+          <button id="sendBtn" class="good" type="button">إرسال</button>
+          <button id="muteBtn" type="button">كتم الصوت: متوقف</button>
+          <button id="clearBtn" class="bad" type="button">مسح الرسائل</button>
+          <button id="testBtn" class="warn" type="button">رسالة تجريبية</button>
+        </div>
+
+        <div class="footer">
+          زر كتم الصوت هنا يغيّر الحالة والنص فقط.  
+          إذا أردت ربط الموقع لاحقًا بخادم Python، أضيف لك نسخة ثانية.
+        </div>
+      </section>
+
+      <aside class="card section">
+        <div class="row">
+          <strong>الإعدادات</strong>
+          <span class="muted tiny">محفوظة تلقائيًا</span>
+        </div>
+
+        <div>
+          <label for="nameInput">اسمك أو اسم الجهاز</label>
+          <input id="nameInput" type="text" placeholder="مثال: عزوز" />
+        </div>
+
+        <div>
+          <label for="noteInput">ملاحظة</label>
+          <input id="noteInput" type="text" placeholder="مثال: هذا الموقع تجريبي" />
+        </div>
+
+        <div class="two">
+          <button id="saveBtn" class="primary" type="button">حفظ الإعدادات</button>
+          <button id="copyBtn" type="button">نسخ الحالة</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="item">
+          <div class="item-head">
+            <span class="item-title">الحالة الحالية</span>
+          </div>
+          <div class="item-meta">الاتصال: <span id="connState" class="on">متصل</span></div>
+          <div class="item-meta">الصوت: <span id="muteState" class="off">مفعل</span></div>
+          <div class="item-meta">الاسم: <span id="savedName">—</span></div>
+          <div class="item-meta">الملاحظة: <span id="savedNote">—</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card section" style="margin-top:18px">
+      <div class="row">
+        <strong>الرسائل</strong>
+        <span class="muted tiny">تظهر مباشرة عند الإرسال</span>
+      </div>
+      <div id="messages" class="list"></div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      connected: true,
+      muted: false,
+      theme: localStorage.getItem("theme") || "dark",
+      name: localStorage.getItem("name") || "",
+      note: localStorage.getItem("note") || "",
+      messages: JSON.parse(localStorage.getItem("messages") || "[]")
+    };
+
+    function now() {
+      return new Date().toLocaleString("ar-SA");
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (ch) => ({
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        "\"":"&quot;",
+        "'":"&#39;"
+      }[ch]));
+    }
+
+    function save() {
+      localStorage.setItem("theme", state.theme);
+      localStorage.setItem("name", state.name);
+      localStorage.setItem("note", state.note);
+      localStorage.setItem("messages", JSON.stringify(state.messages));
+    }
+
+    function render() {
+      document.documentElement.setAttribute("data-theme", state.theme === "light" ? "light" : "dark");
+      $("themeLabel").textContent = state.theme === "light" ? "الوضع الفاتح" : "الوضع الداكن";
+
+      $("statusDot").className = "dot" + (state.connected ? " online" : "");
+      $("connectionText").textContent = state.connected ? "متصل" : "غير متصل";
+      $("connState").textContent = state.connected ? "متصل" : "غير متصل";
+      $("connState").className = state.connected ? "on" : "off";
+
+      $("muteState").textContent = state.muted ? "مكتوم" : "مفعل";
+      $("muteState").className = state.muted ? "off" : "on";
+      $("muteBtn").textContent = state.muted ? "كتم الصوت: تشغيل" : "كتم الصوت: متوقف";
+
+      $("toggleConnectBtn").textContent = state.connected ? "فصل الاتصال" : "توصيل الاتصال";
+      $("lastUpdate").textContent = now();
+
+      $("nameInput").value = state.name;
+      $("noteInput").value = state.note;
+      $("savedName").textContent = state.name || "—";
+      $("savedNote").textContent = state.note || "—";
+
+      const box = $("messages");
+      if (!state.messages.length) {
+        box.innerHTML = `
+          <div class="item">
+            <div class="item-head">
+              <span class="item-title">لا توجد رسائل بعد</span>
+            </div>
+            <div class="item-meta">اكتب رسالة ثم اضغط إرسال.</div>
+          </div>
+        `;
+      } else {
+        box.innerHTML = state.messages.map((m) => `
+          <div class="item">
+            <div class="item-head">
+              <span class="item-title">${escapeHtml(m.title)}</span>
+              <span class="item-meta">${escapeHtml(m.time)}</span>
+            </div>
+            <div>${escapeHtml(m.body)}</div>
+            <div class="item-meta" style="margin-top:6px">
+              ${escapeHtml(m.owner || "مجهول")} ${m.muted ? "• الصوت مكتوم" : ""}
+            </div>
+          </div>
+        `).join("");
+      }
+    }
+
+    function addMessage(title, body) {
+      const text = String(body || "").trim();
+      if (!text) return;
+
+      state.messages.unshift({
+        title,
+        body: text,
+        time: now(),
+        owner: state.name || "مجهول",
+        muted: state.muted
+      });
+      state.messages = state.messages.slice(0, 30);
+      save();
+      render();
+    }
+
+    $("toggleThemeBtn").addEventListener("click", () => {
+      state.theme = state.theme === "light" ? "dark" : "light";
+      save();
+      render();
+    });
+
+    $("toggleConnectBtn").addEventListener("click", () => {
+      state.connected = !state.connected;
+      render();
+    });
+
+    $("muteBtn").addEventListener("click", () => {
+      state.muted = !state.muted;
+      save();
+      render();
+    });
+
+    $("sendBtn").addEventListener("click", () => {
+      addMessage("رسالة جديدة", $("messageInput").value);
+      $("messageInput").value = "";
+      $("messageInput").focus();
+    });
+
+    $("testBtn").addEventListener("click", () => {
+      addMessage("رسالة تجريبية", "هذه رسالة أضيفت من الزر التجريبي.");
+    });
+
+    $("clearBtn").addEventListener("click", () => {
+      state.messages = [];
+      save();
+      render();
+    });
+
+    $("saveBtn").addEventListener("click", () => {
+      state.name = $("nameInput").value.trim();
+      state.note = $("noteInput").value.trim();
+      save();
+      render();
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      const text = [
+        `الاتصال: ${state.connected ? "متصل" : "غير متصل"}`,
+        `الصوت: ${state.muted ? "مكتوم" : "مفعل"}`,
+        `الاسم: ${state.name || "—"}`,
+        `الملاحظة: ${state.note || "—"}`
+      ].join("\n");
+
+      try {
+        await navigator.clipboard.writeText(text);
+        alert("تم نسخ الحالة");
+      } catch (e) {
+        alert("تعذر النسخ في هذا المتصفح");
+      }
+    });
+
+    $("messageInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        $("sendBtn").click();
+      }
+    });
+
+    $("nameInput").addEventListener("input", (e) => {
+      state.name = e.target.value;
+      save();
+      render();
+    });
+
+    $("noteInput").addEventListener("input", (e) => {
+      state.note = e.target.value;
+      save();
+      render();
+    });
+
+    window.addEventListener("online", () => {
+      state.connected = true;
+      render();
+    });
+
+    window.addEventListener("offline", () => {
+      state.connected = false;
+      render();
+    });
+
+    // تشغيل أولي
+    render();
+  </script>
+</body>
+</html>
