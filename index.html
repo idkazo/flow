@@ -1,65 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<title>لوحة متصلة</title>
-<style>
-body{font-family:sans-serif;background:#111;color:#fff;padding:20px}
-button{padding:10px;margin:5px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المولى عبد العزيز</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; background-color: #1a1a1a; color: #fff; text-align: center; padding: 20px; }
+        button { background-color: #4CAF50; color: white; border: none; padding: 15px 20px; margin: 10px; cursor: pointer; border-radius: 5px; font-size: 16px; width: 80%; max-width: 300px;}
+        button:hover { background-color: #45a049; }
+        textarea, input { width: 80%; max-width: 400px; padding: 10px; margin: 10px; border-radius: 5px; border: none; }
+        #outputArea { margin-top: 20px; background: #333; padding: 15px; border-radius: 10px; min-height: 100px; word-wrap: break-word;}
+        img { max-width: 100%; border-radius: 10px; margin-top: 10px; }
+    </style>
 </head>
 <body>
 
-<h2>الحالة: <span id="status">...</span></h2>
+    <h2>تحكم بجهازك يا مولاي</h2>
 
-<textarea id="msg" placeholder="اكتب رسالة"></textarea><br>
+    <button onclick="sendCommand('screenshot', '')">📸 تصوير الشاشة</button>
+    <br>
+    <button onclick="sendCommand('mute', '')">🔇 كتم / تشغيل الصوت</button>
+    <br>
+    
+    <textarea id="pythonCode" rows="4" placeholder="اكتب كود بايثون هنا..."></textarea>
+    <br>
+    <button onclick="sendPython()">🐍 تشغيل كود بايثون</button>
+    <br>
 
-<button onclick="send()">إرسال</button>
-<button onclick="toggleMute()">كتم الصوت</button>
-<button onclick="upload()">رفع صورة</button>
+    <input type="text" id="cmdCommand" placeholder="اكتب أمر CMD هنا (مثال: ipconfig أو dir)">
+    <br>
+    <button onclick="sendCmd()">💻 تنفيذ أمر CMD</button>
 
-<div id="messages"></div>
+    <div id="outputArea">
+        <h3>النتيجة ستظهر هنا:</h3>
+        <p id="resultText">في انتظار الأوامر...</p>
+        <img id="screenshotImg" style="display:none;" src="" alt="Screenshot">
+    </div>
 
-<script>
-let muted = false
-const API = "http://127.0.0.1:5000"
+    <script>
+        // ضع رابط قاعدة بيانات Firebase الخاصة بك هنا
+        const FIREBASE_URL = "https://YOUR_PROJECT_ID.firebaseio.com/";
 
-async function heartbeat(){
-  await fetch(API+"/heartbeat",{method:"POST"})
-}
+        function sendCommand(action, data) {
+            document.getElementById('resultText').innerText = "جاري الإرسال...";
+            document.getElementById('screenshotImg').style.display = 'none';
 
-async function load(){
-  let res = await fetch(API+"/status")
-  let data = await res.json()
+            fetch(FIREBASE_URL + "command.json", {
+                method: "PUT",
+                body: JSON.stringify({ action: action, data: data, timestamp: Date.now() })
+            })
+            .then(() => checkResult())
+            .catch(err => alert("حدث خطأ في الإرسال: " + err));
+        }
 
-  document.getElementById("status").innerText =
-    data.online ? "متصل" : "غير متصل"
+        function sendPython() {
+            let code = document.getElementById('pythonCode').value;
+            sendCommand('python', code);
+        }
 
-  let box = document.getElementById("messages")
-  box.innerHTML = data.messages.map(m=>"<p>"+m.text+"</p>").join("")
-}
+        function sendCmd() {
+            let cmd = document.getElementById('cmdCommand').value;
+            sendCommand('cmd', cmd);
+        }
 
-async function send(){
-  let text = document.getElementById("msg").value
-  await fetch(API+"/message",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({text})
-  })
-}
-
-function toggleMute(){
-  muted = !muted
-  alert(muted ? "تم كتم الصوت" : "تم تشغيل الصوت")
-}
-
-function upload(){
-  alert("اختر صورة من جهازك (بدل تصوير الشاشة)")
-}
-
-setInterval(heartbeat,3000)
-setInterval(load,3000)
-</script>
-
+        // دالة لمراقبة النتيجة من الكمبيوتر
+        function checkResult() {
+            let interval = setInterval(() => {
+                fetch(FIREBASE_URL + "result.json")
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.timestamp > Date.now() - 10000) { // التأكد أن النتيجة جديدة
+                        clearInterval(interval);
+                        if (data.type === "image") {
+                            document.getElementById('screenshotImg').src = "data:image/png;base64," + data.content;
+                            document.getElementById('screenshotImg').style.display = 'block';
+                            document.getElementById('resultText').innerText = "تم التقاط الصورة.";
+                        } else {
+                            document.getElementById('resultText').innerText = data.content;
+                        }
+                    }
+                });
+            }, 3000); // يفحص النتيجة كل 3 ثوانٍ
+        }
+    </script>
 </body>
 </html>
